@@ -99,4 +99,27 @@ class PriceChecker
             }
         }
     }
+
+    public function getCompetitivePricingProducts()
+{
+    $searchCriteria = $this->searchCriteriaBuilder
+        ->addFilter('price', 0, 'gt') // Ensure the price is greater than 0
+        ->addFilter('competitor_price', 0, 'gt') // Ensure competitor price is greater than 0
+        ->create();
+
+    $products = $this->productRepository->getList($searchCriteria)->getItems();
+
+    $competitiveProducts = [];
+    foreach ($products as $product) {
+        $storePrice = (float) $product->getPrice();
+        $competitorPrice = (float) $product->getCustomAttribute('competitor_price')->getValue();
+        // Check if competitor's price is lower than store price
+        if ($competitorPrice > 0 && $storePrice > $competitorPrice) {
+            $competitiveProducts[] = $product;
+        }
+    }
+
+    return $competitiveProducts;
+}
+
 }
