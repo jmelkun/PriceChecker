@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
+    <menu>
+        <add id="Jared_PriceChecker::pricechecker" title="Price Checker" module="Jared_PriceChecker" sortOrder="100" resource="Jared_PriceChecker::pricechecker"/>
+        <add id="Jared_PriceChecker::check_prices" title="Check Prices" module="Jared_PriceChecker" sortOrder="10" action="pricechecker/priceChecker/check" resource="Jared_PriceChecker::check_prices" parent="Jared_PriceChecker::pricechecker"/>
+    </menu>
+</config>
