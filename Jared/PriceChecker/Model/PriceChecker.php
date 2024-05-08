@@ -31,57 +31,37 @@ class PriceChecker
     }
 
     public function checkPrices(){
-    
         $products = $this->productRepository->getList($this->searchCriteriaBuilder->create());
-
+    
         foreach ($products->getItems() as $product) {
             $competitorUrl = $product->getCustomAttribute('competitor_url');
             $priceSnippet = $product->getCustomAttribute('price_snippet');
-
+    
             if ($competitorUrl && $competitorUrl->getValue() && $priceSnippet && $priceSnippet->getValue()) {
                 $url = $competitorUrl->getValue();
                 $snippet = $priceSnippet->getValue();
-
+    
+                $client = $this->httpClient;
+                $client->setHeaders(['Content-Type' => 'application/json']);
+                $client->post('YOUR AWS LAMBDA API HERE', json_encode(['url' => $url, 'snippet' => $snippet]));
+    
                 try {
-                    // Random delay between 5 to 10 seconds
-                    $delayInSeconds = rand(5, 10);
-                    sleep($delayInSeconds);
+                    $body = json_decode($client->getBody(), true);
+                    if ($client->getStatus() == 200 && isset($body['body'])) {
                     
-                    $this->httpClient->get($url);
-                    $response = $this->httpClient->getBody();
-
-                    if ($this->httpClient->getStatus() == 200) {
-                        $html = $response;
-                        $this->logger->info('Regex Used:' . $snippet);
-
-                        // Escape the snippet to use it as a regex pattern
-                        $pattern = '#' . $snippet . '#';
-
-                        // Search for the matching HTML tag in the text
-                        if (preg_match($pattern, $html, $matches)) {
-                            $competitorPrice = $matches[1];
-
-                            // Store the competitor's price in the 'competitor_price' attribute
-                            $product->setCustomAttribute('competitor_price', $competitorPrice);
-                            $this->productRepository->save($product); // Save each product individually
-                        } else {
-                            $this->logger->warning(
-                                sprintf(
-                                    'No matching price found for product SKU: %s, Product ID: %s, URL: %s',
-                                    $product->getSku(),
-                                    $product->getId(),
-                                    $url
-                                )
-                            );
-                        }
+                        $competitorPrice = $body['body'];
+    
+                        // Store the competitor's price in the 'competitor_price' attribute
+                        $product->setCustomAttribute('competitor_price', $competitorPrice);
+                        $this->productRepository->save($product); // Save each product individually
                     } else {
                         $this->logger->warning(
                             sprintf(
-                                'Failed to check price for product SKU: %s, Product ID: %s, URL: %s, Status code: %s',
+                                'No matching price found for product SKU: %s, Product ID: %s, URL: %s, body: %s',
                                 $product->getSku(),
                                 $product->getId(),
                                 $url,
-                                $this->httpClient->getStatus()
+                                $body["body"]
                             )
                         );
                     }
@@ -99,6 +79,8 @@ class PriceChecker
             }
         }
     }
+    
+    
 
     public function getCompetitivePricingProducts()
 {
