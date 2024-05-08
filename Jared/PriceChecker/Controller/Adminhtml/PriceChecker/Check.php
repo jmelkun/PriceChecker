@@ -31,8 +31,4 @@ class Check extends Action
         return $resultRedirect->setPath('*/*/');
     }
 
-    protected function _isAllowed()
-    {
-        return $this->_authorization->isAllowed('Jared_PriceChecker::check_prices');
-    }
 }
